@@ -5,12 +5,27 @@ python siteconfig_do_siteconfig () {
 	if not os.path.isdir(os.path.join(d.getVar('FILE_DIRNAME', True), 'site_config')):
 		bb.debug(1, "No site_config directory, skipping do_siteconfig")
 		return
-	bb.build.exec_func('do_siteconfig_gencache', d)
+
+	# do_siteconfig_gencache needs to run against the files just installed by
+	# this recipe; when using isolated sysroots, TOOLCHAIN_OPTIONS contains
+	# a sysroot that does not point to this location and the cache is generated
+	# incorrectly. Fix this by applying an override that adds the required
+	# search paths.
+	localdata = bb.data.createCopy(d)
+	localdata.setVar('OVERRIDES', 'siteconfig:' + d.getVar('OVERRIDES', True))
+	bb.data.update_data(localdata)
+	bb.build.exec_func('do_siteconfig_gencache', localdata)
+
 	sstate_clean(shared_state, d)
 	sstate_install(shared_state, d)
 }
 
 EXTRASITECONFIG ?= ""
+EXTRASITECONFIG_CFLAGS ?= "-isystem${SYSROOT_DESTDIR}${includedir}"
+EXTRASITECONFIG_LDFLAGS ?= "-L${SYSROOT_DESTDIR}${base_libdir} -L${SYSROOT_DESTDIR}${libdir}"
+
+CFLAGS_append_siteconfig ?= " ${EXTRASITECONFIG_CFLAGS}"
+LDFLAGS_append_siteconfig ?= " ${EXTRASITECONFIG_LDFLAGS}"
 
 siteconfig_do_siteconfig_gencache () {
 	mkdir -p ${WORKDIR}/site_config_${MACHINE}
