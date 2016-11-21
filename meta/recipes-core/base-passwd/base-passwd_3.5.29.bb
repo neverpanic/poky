@@ -55,11 +55,11 @@ base_passwd_sstate_postinst() {
 		# permissions.
 		# Install passwd.master and group.master to sysconfdir and mv
 		# them to make sure they are atomically install.
-		install -d -m 755 ${STAGING_DIR_TARGET}${sysconfdir}
+		install -d -m 755 ${WRITE_STAGING_DIR_TARGET}${sysconfdir}
 		for i in passwd group; do
-			install -p -m 644 ${STAGING_DIR_TARGET}${datadir}/base-passwd/$i.master \
-				${STAGING_DIR_TARGET}${sysconfdir}/
-			mv ${STAGING_DIR_TARGET}${sysconfdir}/$i.master ${STAGING_DIR_TARGET}${sysconfdir}/$i
+			install -p -m 644 ${WRITE_STAGING_DIR_TARGET}${datadir}/base-passwd/$i.master \
+				${WRITE_STAGING_DIR_TARGET}${sysconfdir}/
+			mv ${WRITE_STAGING_DIR_TARGET}${sysconfdir}/$i.master ${WRITE_STAGING_DIR_TARGET}${sysconfdir}/$i
 		done
 	fi
 }
