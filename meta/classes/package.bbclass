@@ -35,7 +35,7 @@
 #
 # k) package_depchains - Adds automatic dependencies to -dbg and -dev packages
 #
-# l) emit_pkgdata - saves the packaging data into PKGDATA_DIR for use in later
+# l) emit_pkgdata - saves the packaging data into WRITE_PKGDATA_DIR for use in later
 #    packaging steps
 
 inherit packagedata
@@ -2131,7 +2131,7 @@ addtask packagedata before do_build after do_package
 
 SSTATETASKS += "do_packagedata"
 do_packagedata[sstate-inputdirs] = "${PKGDESTWORK}"
-do_packagedata[sstate-outputdirs] = "${PKGDATA_DIR}"
+do_packagedata[sstate-outputdirs] = "${WRITE_PKGDATA_DIR}"
 do_packagedata[sstate-lockfile-shared] = "${PACKAGELOCK}"
 do_packagedata[stamp-extra-info] = "${MACHINE}"
 

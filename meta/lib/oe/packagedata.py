@@ -25,7 +25,10 @@ def read_pkgdatafile(fn):
     return pkgdata
 
 def get_subpkgedata_fn(pkg, d):
-    return d.expand('${PKGDATA_DIR}/runtime/%s' % pkg)
+    fn = d.expand('${WRITE_PKGDATA_DIR}/runtime/%s' % pkg)
+    if not os.path.exists(fn):
+        fn = d.expand('${PKGDATA_DIR}/runtime/%s' % pkg)
+    return fn
 
 def has_subpkgdata(pkg, d):
     return os.access(get_subpkgedata_fn(pkg, d), os.R_OK)
@@ -34,11 +37,15 @@ def read_subpkgdata(pkg, d):
     return read_pkgdatafile(get_subpkgedata_fn(pkg, d))
 
 def has_pkgdata(pn, d):
-    fn = d.expand('${PKGDATA_DIR}/%s' % pn)
+    fn = d.expand('${WRITE_PKGDATA_DIR}/%s' % pn)
+    if not os.path.exists(fn):
+        fn = d.expand('${PKGDATA_DIR}/%s' % pn)
     return os.access(fn, os.R_OK)
 
 def read_pkgdata(pn, d):
-    fn = d.expand('${PKGDATA_DIR}/%s' % pn)
+    fn = d.expand('${WRITE_PKGDATA_DIR}/%s' % pn)
+    if not os.path.exists(fn):
+        fn = d.expand('${PKGDATA_DIR}/%s' % pn)
     return read_pkgdatafile(fn)
 
 #
@@ -54,21 +61,34 @@ def read_subpkgdata_dict(pkg, d):
         ret[newvar] = subd[var]
     return ret
 
+def _pkgmap_read_datadir(d, datadir):
+    files = {}
+    for f in os.listdir(datadir):
+        if not os.path.isdir(os.path.join(datadir, f)):
+            files[f] = datadir
+    return files
+
 def _pkgmap(d):
     """Return a dictionary mapping package to recipe name."""
 
     pkgdatadir = d.getVar("PKGDATA_DIR", True)
+    writepkgdatadir = d.getVar("WRITE_PKGDATA_DIR", True)
 
     pkgmap = {}
+    files = {}
     try:
-        files = os.listdir(pkgdatadir)
+        files.update(_pkgmap_read_datadir(pkgdatadir))
     except OSError:
         bb.warn("No files in %s?" % pkgdatadir)
-        files = []
+    try:
+        # Give entries in writepkgdatadir higher priority
+        files.update(_pkgmap_read_datadir(writepkgdatadir))
+    except OSError:
+        bb.warn("No files in %s?" % pkgdatadir)
 
-    for pn in [f for f in files if not os.path.isdir(os.path.join(pkgdatadir, f))]:
+    for datadir, pn in files.iteritems():
         try:
-            pkgdata = read_pkgdatafile(os.path.join(pkgdatadir, pn))
+            pkgdata = read_pkgdatafile(os.path.join(datadir, pn))
         except OSError:
             continue
 
