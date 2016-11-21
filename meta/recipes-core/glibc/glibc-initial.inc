@@ -44,7 +44,7 @@ do_install () {
 	fi
 	# add links to linux-libc-headers: final glibc build need this.
 	for t in linux asm asm-generic; do
-		ln -s ${STAGING_DIR_TARGET}${includedir}/$t ${D}${includedir}/
+		ln -s ${WRITE_STAGING_DIR_TARGET}${includedir}/$t ${D}${includedir}/
 	done
 }
 
@@ -62,13 +62,13 @@ glibcinitial_sstate_postinst() {
 	then
 		# Recreate the symlinks to ensure they point to the correct location
 		for t in linux asm asm-generic; do
-			rm -f ${STAGING_DIR_TCBOOTSTRAP}${includedir}/$t
-			ln -s ${STAGING_DIR_TARGET}${includedir}/$t ${STAGING_DIR_TCBOOTSTRAP}${includedir}/
+			rm -f ${WRITE_STAGING_DIR_TCBOOTSTRAP}${includedir}/$t
+			ln -s ${WRITE_STAGING_DIR_TARGET}${includedir}/$t ${WRITE_STAGING_DIR_TCBOOTSTRAP}${includedir}/
 		done
 	fi
 }
 
-do_populate_sysroot[sstate-outputdirs] = "${STAGING_DIR_TCBOOTSTRAP}/"
+do_populate_sysroot[sstate-outputdirs] = "${WRITE_STAGING_DIR_TCBOOTSTRAP}/"
 
 # We don't install any scripts so there is nothing to evacuate
 do_evacuate_scripts () {

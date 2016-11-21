@@ -14,6 +14,6 @@ EXTRA_OECONF += "--disable-shared"
 
 LIBGCCBUILDTREENAME = "gcc-build-internal-initial-"
 
-do_populate_sysroot[sstate-outputdirs] = "${STAGING_DIR_TCBOOTSTRAP}/"
+do_populate_sysroot[sstate-outputdirs] = "${WRITE_STAGING_DIR_TCBOOTSTRAP}/"
 
 inherit nopackages
