@@ -29,6 +29,8 @@ def process_file_linux(cmd, fpath, rootdir, baseprefix, tmpdir, d):
         if baseprefix not in rpath and tmpdir not in rpath:
             new_rpaths.append(rpath.strip())
             continue
+        if bb.data.inherits_class('isolated-sysroots', d):
+            rpath = rpath.strip().replace(d.getVar('STAGING_DIR', True), d.getVar('WRITE_STAGING_DIR', True))
         new_rpaths.append("$ORIGIN/" + os.path.relpath(rpath.strip(), os.path.dirname(fpath.replace(rootdir, "/"))))
         modified = True
 
