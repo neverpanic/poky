@@ -15,9 +15,20 @@ export PERL_LIB = "${STAGING_LIBDIR}${PERL_OWN_DIR}/perl/${@get_perl_version(d)}
 export PERL_ARCHLIB = "${STAGING_LIBDIR}${PERL_OWN_DIR}/perl/${@get_perl_version(d)}"
 export PERLHOSTLIB = "${STAGING_LIBDIR_NATIVE}/perl-native/perl/${@get_perl_version(d)}/"
 
+
 cpan_do_configure () {
 	export PERL5LIB="${PERL_ARCHLIB}"
-	yes '' | perl ${EXTRA_PERLFLAGS} Makefile.PL INSTALLDIRS=vendor ${EXTRA_CPANFLAGS}
+	yes '' | perl \
+		${EXTRA_PERLFLAGS} \
+		Makefile.PL \
+		INSTALLDIRS=vendor \
+		INSTALLVENDORARCH="${WRITE_STAGING_LIBDIR}${PERL_OWN_DIR}/perl/vendor_perl/${@get_perl_version(d)}" \
+		INSTALLVENDORLIB="${WRITE_STAGING_LIBDIR}${PERL_OWN_DIR}/perl/vendor_perl/${@get_perl_version(d)}" \
+		INSTALLVENDORBIN="${WRITE_STAGING_BINDIR}" \
+		INSTALLVENDORSCRIPT="${WRITE_STAGING_BINDIR}" \
+		INSTALLVENDORMAN1DIR="${WRITE_STAGING_DATADIR}/man/man1" \
+		INSTALLVENDORMAN3DIR="${WRITE_STAGING_DATADIR}/man/man3" \
+		${EXTRA_CPANFLAGS}
 
 	# Makefile.PLs can exit with success without generating a
 	# Makefile, e.g. in cases of missing configure time

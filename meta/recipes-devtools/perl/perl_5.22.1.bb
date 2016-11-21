@@ -190,8 +190,8 @@ do_configure() {
         # Update some paths in the configuration
         sed -i -e 's,@ARCH@-thread-multi,,g' \
                -e 's,@ARCH@,${TARGET_ARCH}-${TARGET_OS},g' \
-               -e 's,@STAGINGDIR@,${STAGING_DIR_HOST},g' \
-               -e "s,@INCLUDEDIR@,${STAGING_INCDIR},g" \
+               -e 's,@STAGINGDIR@,${WRITE_STAGING_DIR_HOST},g' \
+               -e "s,@INCLUDEDIR@,${WRITE_STAGING_INCDIR},g" \
                -e "s,@LIBDIR@,${libdir},g" \
                -e "s,@BASELIBDIR@,${base_libdir},g" \
                -e "s,@EXECPREFIX@,${exec_prefix},g" \
@@ -211,7 +211,7 @@ do_configure() {
         # These are strewn all over the source tree
         for foo in `grep -I --exclude="*.patch" --exclude="*.diff" --exclude="*.pod" --exclude="README*" -m1 "/usr/include/.*\.h" ${S}/* -r -l` ${S}/utils/h2xs.PL ; do
             echo Fixing: $foo
-            sed -e 's|\([ "^'\''I]\+\)/usr/include/|\1${STAGING_INCDIR}/|g' -i $foo
+            sed -e 's|\([ "^'\''I]\+\)/usr/include/|\1${WRITE_STAGING_INCDIR}/|g' -i $foo
         done
 
         rm -f config
@@ -221,7 +221,7 @@ do_configure() {
 
 do_compile() {
         # Fix to avoid recursive substitution of path
-        sed -i -e 's|(@libpath, ".*"|(@libpath, "${STAGING_LIBDIR}"|g' cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm
+        sed -i -e 's|(@libpath, ".*"|(@libpath, "${WRITE_STAGING_LIBDIR}"|g' cpan/ExtUtils-MakeMaker/lib/ExtUtils/Liblist/Kid.pm
 
         cd Cross
         oe_runmake perl LD="${CCLD}"
@@ -261,14 +261,14 @@ PACKAGE_PREPROCESS_FUNCS += "perl_package_preprocess"
 perl_package_preprocess () {
         # Fix up installed configuration
         sed -i -e "s,${D},,g" \
-               -e "s,--sysroot=${STAGING_DIR_HOST},,g" \
-               -e "s,-isystem${STAGING_INCDIR} ,,g" \
-               -e "s,${STAGING_LIBDIR},${libdir},g" \
-               -e "s,${STAGING_BINDIR},${bindir},g" \
-               -e "s,${STAGING_INCDIR},${includedir},g" \
-               -e "s,${STAGING_BINDIR_NATIVE}/perl-native/,${bindir}/,g" \
-               -e "s,${STAGING_BINDIR_NATIVE}/,,g" \
-               -e "s,${STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX},${bindir},g" \
+               -e "s,--sysroot=${WRITE_STAGING_DIR_HOST},,g" \
+               -e "s,-isystem${WRITE_STAGING_INCDIR} ,,g" \
+               -e "s,${WRITE_STAGING_LIBDIR},${libdir},g" \
+               -e "s,${WRITE_STAGING_BINDIR},${bindir},g" \
+               -e "s,${WRITE_STAGING_INCDIR},${includedir},g" \
+               -e "s,${WRITE_STAGING_BINDIR_NATIVE}/perl-native/,${bindir}/,g" \
+               -e "s,${WRITE_STAGING_BINDIR_NATIVE}/,,g" \
+               -e "s,${WRITE_STAGING_BINDIR_TOOLCHAIN}/${TARGET_PREFIX},${bindir},g" \
             ${PKGD}${bindir}/h2xs \
             ${PKGD}${bindir}/h2ph \
             ${PKGD}${bindir}/pod2man \

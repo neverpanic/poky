@@ -33,14 +33,15 @@ do_configure () {
 		-Dvendorprefix=${prefix} \
 		-Dsiteprefix=${prefix} \
 		\
-		-Dbin=${STAGING_BINDIR}/${PN} \
-		-Dprivlib=${STAGING_LIBDIR}/perl/${PV} \
-		-Darchlib=${STAGING_LIBDIR}/perl/${PV} \
-		-Dvendorlib=${STAGING_LIBDIR}/perl/vendor_perl/${PV} \
-		-Dvendorarch=${STAGING_LIBDIR}/perl/vendor_perl/${PV} \
-		-Dsitelib=${STAGING_LIBDIR}/perl/site_perl/${PV} \
-		-Dsitearch=${STAGING_LIBDIR}/perl/site_perl/${PV} \
+		-Dbin=${WRITE_STAGING_BINDIR}/${PN} \
+		-Dprivlib=${libdir}/perl/${PV} \
+		-Darchlib=${libdir}/perl/${PV} \
+		-Dvendorlib=${libdir}/perl/vendor_perl/${PV} \
+		-Dvendorarch=${libdir}/perl/vendor_perl/${PV} \
+		-Dsitelib=${libdir}/perl/site_perl/${PV} \
+		-Dsitearch=${libdir}/perl/site_perl/${PV} \
 		\
+		-Dinstallstyle="lib/perl5" \
 		-Duseshrplib \
 		-Dusethreads \
 		-Duseithreads \
@@ -60,9 +61,10 @@ do_configure () {
 		-Uafs \
 		-Ud_csh \
 		-Uusesfio \
-		-Uusenm -des
+		-Uusenm -desO
 }
 
+bindir_to_libdir = "${@os.path.relpath(d.getVar('libdir', True), d.getVar('bindir', True))}"
 do_install () {
 	oe_runmake 'DESTDIR=${D}' install
 
@@ -100,8 +102,9 @@ do_install () {
 	# Those wrappers mean that perl installed from sstate (which may change
 	# path location) works and that in the nativesdk case, the SDK can be
 	# installed to a different location from the one it was built for.
-	create_wrapper ${D}${bindir}/perl PERL5LIB='$PERL5LIB:${STAGING_LIBDIR}/perl/site_perl/${PV}:${STAGING_LIBDIR}/perl/vendor_perl/${PV}:${STAGING_LIBDIR}/perl/${PV}'
-	create_wrapper ${D}${bindir}/perl${PV} PERL5LIB='$PERL5LIB:${STAGING_LIBDIR}/perl/site_perl/${PV}:${STAGING_LIBDIR}/perl/vendor_perl/${PV}:${STAGING_LIBDIR}/perl/${PV}'
+
+	create_wrapper ${D}${bindir}/perl PERL5LIB='$PERL5LIB:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/site_perl/${PV}:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/vendor_perl/${PV}:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/${PV}'
+	create_wrapper ${D}${bindir}/perl${PV} PERL5LIB='$PERL5LIB:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/site_perl/${PV}:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/vendor_perl/${PV}:$(realpath "$(dirname "$realpath")/${bindir_to_libdir}")/perl/${PV}'
 
 	# Use /usr/bin/env nativeperl for the perl script.
 	for f in `grep -Il '#! *${bindir}/perl' ${D}/${bindir}/*`; do
