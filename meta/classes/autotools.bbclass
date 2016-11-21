@@ -136,6 +136,9 @@ do_configure[postfuncs] += "autotools_postconfigure"
 
 ACLOCALDIR = "${WORKDIR}/aclocal-copy"
 
+# Isolated sysroots requires that we tell autoconf where to find its perl modules
+export autom4te_perllibdir = "${STAGING_DATADIR_NATIVE}/autoconf"
+
 python autotools_copy_aclocals () {
     import copy
 
