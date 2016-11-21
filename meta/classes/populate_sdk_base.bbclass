@@ -104,6 +104,7 @@ def populate_sdk_common(d):
 
     ld = bb.data.createCopy(d)
     ld.setVar("PKGDATA_DIR", "${STAGING_DIR}/${SDK_ARCH}-${SDKPKGSUFFIX}${SDK_VENDOR}-${SDK_OS}/pkgdata")
+    ld.setVar("WRITE_PKGDATA_DIR", "${WRITE_STAGING_DIR}/${SDK_ARCH}-${SDKPKGSUFFIX}${SDK_VENDOR}-${SDK_OS}/pkgdata")
     runtime_mapping_rename("TOOLCHAIN_HOST_TASK", pn, ld)
     runtime_mapping_rename("TOOLCHAIN_HOST_TASK_ATTEMPTONLY", pn, ld)
     d.setVar("TOOLCHAIN_HOST_TASK", ld.getVar("TOOLCHAIN_HOST_TASK", True))
@@ -271,7 +272,7 @@ do_populate_sdk[vardeps] += "${@sdk_variables(d)}"
 do_populate_sdk[file-checksums] += "${COREBASE}/meta/files/toolchain-shar-relocate.sh:True \
                                     ${COREBASE}/meta/files/toolchain-shar-extract.sh:True"
 
-do_populate_sdk[dirs] = "${PKGDATA_DIR} ${TOPDIR}"
+do_populate_sdk[dirs] = "${WRITE_PKGDATA_DIR} ${PKGDATA_DIR} ${TOPDIR}"
 do_populate_sdk[depends] += "${@' '.join([x + ':do_populate_sysroot' for x in d.getVar('SDK_DEPENDS', True).split()])}  ${@d.getVarFlag('do_rootfs', 'depends', False)}"
 do_populate_sdk[rdepends] = "${@' '.join([x + ':do_populate_sysroot' for x in d.getVar('SDK_RDEPENDS', True).split()])}"
 do_populate_sdk[recrdeptask] += "do_packagedata do_package_write_rpm do_package_write_ipk do_package_write_deb"
