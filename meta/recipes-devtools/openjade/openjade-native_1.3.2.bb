@@ -36,7 +36,7 @@ EXTRA_OECONF = "--enable-spincludedir=${STAGING_INCDIR}/OpenSP \
 
 # We need to set datadir explicitly, but adding it to EXTRA_OECONF
 # results in it being specified twice when configure is run.
-CONFIGUREOPTS := "${@d.getVar('CONFIGUREOPTS', True).replace('--datadir=${datadir}', '--datadir=${STAGING_DATADIR}/sgml/openjade-${PV}')}"
+CONFIGUREOPTS := "${@d.getVar('CONFIGUREOPTS', True).replace('--datadir=${datadir}', '--datadir=${WRITE_STAGING_DATADIR}/sgml/openjade-${PV}')}"
 
 # CONFIGUREOPTS has hard coded paths so we need to ignore it's vardeps
 # there are other bits in there too but they are picked up by other variable
