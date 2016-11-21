@@ -1,0 +1,51 @@
+Allow overriding lt_sysroot from the environment
+
+When cross-compiling with isolated sysroots, a copy of libtool built for
+cross-compilation will hardcode its own sysroot into lt_sysroot. If the
+sysroots differ for each recipe, this at best breaks compilation and at worst
+uses things from libtool-cross' sysroot.
+
+Adjust lt_sysroot so it can be overwritten from the environment with the
+correct value for said dependency and add lt_compiler_sysroot which should
+point to STAGING_DIR_NATIVE and will be used to determine the correct path to
+compiler-builtin library search paths.
+
+Upstream-Status: Pending
+Signed-off-by: Clemens Lang <clemens.lang@bmw-carit.de>
+--- libtool-2.4.6/m4/libtool.m4.orig	2016-08-15 15:13:09.956688038 +0200
++++ libtool-2.4.6/m4/libtool.m4	2016-08-15 15:14:12.685731327 +0200
+@@ -1279,8 +1279,9 @@
+ esac
+ 
+  AC_MSG_RESULT([${lt_sysroot:-no}])
+-_LT_DECL([], [lt_sysroot], [0], [The root where to search for ]dnl
+-[dependent libraries, and where our libraries should be installed.])])
++_LT_DECL([], [lt_sysroot], [\${lt_sysroot_override:-${lt_sysroot}}],
++[The root where to search for dependent libraries, and where our libraries ]dnl
++[should be installed.])])
+ 
+ # _LT_ENABLE_LOCK
+ # ---------------
+@@ -7573,8 +7573,21 @@ if AC_TRY_EVAL(ac_compile); then
+          -l*) func_stripname_cnf '-l' '' "$p"; prev=-l; p=$func_stripname_result ;;
+          esac
+        fi
++
++       # Replace occurrences of $lt_sysroot and $lt_compiler_sysroot with
++       # variable references so that both $lt_sysroot and $lt_compiler_sysroot
++       # can change after libtool was compiled.
++       if test -n "$lt_compiler_sysroot"; then
++         case $p in
++           "$lt_compiler_sysroot"*)
++             func_stripname_cnf "$lt_compiler_sysroot" '' "$p"
++             p="\${lt_compiler_sysroot:-$lt_compiler_sysroot}$func_stripname_result" ;;
++         esac
++       fi
+        case $p in
+-       =*) func_stripname_cnf '=' '' "$p"; p=$lt_sysroot$func_stripname_result ;;
++         "$lt_sysroot"*)
++           func_stripname_cnf "$lt_sysroot" '' "$p"
++           p="\${lt_sysroot:-$lt_sysroot}$func_stripname_result" ;;
+        esac
+        if test no = "$pre_test_object_deps_done"; then
+ 	 case $prev in

@@ -47,6 +47,15 @@ export CXXFLAGS_FOR_BUILD="${BUILD_CXXFLAGS}"
 export LD_FOR_BUILD = "${BUILD_LD}"
 export LDFLAGS_FOR_BUILD = "${BUILD_LDFLAGS}"
 
+# Ensure libtool-cross uses the correct sysroot even with
+# isolated-sysroots.bbclass. This requires a patched libtool-cross!
+LIBTOOL_SYSROOT_OVERRIDE = ""
+LIBTOOL_SYSROOT_OVERRIDE_class-target = "${STAGING_DIR_HOST}"
+LIBTOOL_COMPILER_SYSROOT = ""
+LIBTOOL_COMPILER_SYSROOT_class-target = "${STAGING_DIR_NATIVE}"
+export lt_sysroot_override = "${LIBTOOL_SYSROOT_OVERRIDE}"
+export lt_compiler_sysroot = "${LIBTOOL_COMPILER_SYSROOT}"
+
 def append_libtool_sysroot(d):
     # Only supply libtool sysroot option for non-native packages
     if not bb.data.inherits_class('native', d):
