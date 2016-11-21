@@ -13,6 +13,7 @@ do_configure[cleandirs] = "${B}"
 # Disable ccmake since we don't depend on ncurses
 CMAKE_EXTRACONF = "\
     -DCMAKE_LIBRARY_PATH=${STAGING_LIBDIR_NATIVE} \
+    -DCMAKE_INCLUDE_PATH=${STAGING_INCDIR_NATIVE} \
     -DBUILD_CursesDialog=0 \
     -DCMAKE_USE_SYSTEM_LIBRARIES=1 \
     -DCMAKE_USE_SYSTEM_LIBRARY_JSONCPP=0 \
