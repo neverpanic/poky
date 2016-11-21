@@ -15,6 +15,7 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/flex/flex-${PV}.tar.bz2 \
            file://do_not_create_pdf_doc.patch \
            file://0001-tests-add-a-target-for-building-tests-without-runnin.patch \
            file://0002-avoid-c-comments-in-c-code-fails-with-gcc-6.patch \
+           file://fall-back-to-m4-in-path-on-error.patch \
            ${@bb.utils.contains('PTEST_ENABLED', '1', '', 'file://disable-tests.patch', d)} \
            "
 
@@ -31,14 +32,6 @@ EXTRA_OECONF += "ac_cv_path_M4=${M4}"
 EXTRA_OEMAKE += "m4=${STAGING_BINDIR_NATIVE}/m4"
 
 EXTRA_OEMAKE += "${@bb.utils.contains('PTEST_ENABLED', '1', 'FLEX=${STAGING_BINDIR_NATIVE}/flex', '', d)}"
-
-do_install_append_class-native() {
-	create_wrapper ${D}/${bindir}/flex M4=${M4}
-}
-
-do_install_append_class-nativesdk() {
-	create_wrapper ${D}/${bindir}/flex M4=${M4}
-}
 
 RDEPENDS_${PN} += "m4"
 RDEPENDS_${PN}-ptest += "bash gawk"

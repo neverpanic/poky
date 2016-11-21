@@ -1,0 +1,59 @@
+Use $PATH if m4 is not in its configure-time location
+
+Instead of creating a wrapper script that sets the M4 environment variable,
+just fall back to "m4" from $PATH if the configure-time location of m4 no
+longer exists. This fixes builds that use separate sysroots, where the path of
+m4 changes per component.
+
+Since this calls stat(2), add a configure check for its headers and include
+sys/types.h and sys/stat.h in flexdefs.h. Additionally, add a missing configure
+check for sys/wait.h, because HAVE_SYS_WAIT_H was never defined, which made the
+guarded include for it in flexdefs.h a no-op.
+
+Upstream-Status: Pending
+Signed-off-by: Clemens Lang <clemens.lang@bmw-carit.de>
+--- flex-2.6.0/src/main.c.orig	2016-08-17 19:04:56.636466201 +0200
++++ flex-2.6.0/src/main.c	2016-08-17 19:15:35.262528973 +0200
+@@ -363,8 +363,15 @@
+ 
+     /* Setup the filter chain. */
+     output_chain = filter_create_int(NULL, filter_tee_header, headerfilename);
+-    if ( !(m4 = getenv("M4")))
++    if ( !(m4 = getenv("M4"))) {
++        struct stat st;
+         m4 = M4;
++        if (0 != stat(m4, &st)) {
++            /* If our configure-time M4 does not exist and no environment
++             * variable was set, fall back to assuming m4 is in PATH. */
++            m4 = "m4";
++        }
++    }
+     filter_create_ext(output_chain, m4, "-P", 0);
+     filter_create_int(output_chain, filter_fix_linedirs, NULL);
+ 
+--- flex-2.6.0/configure.ac.orig	2016-08-17 19:23:02.061591402 +0200
++++ flex-2.6.0/configure.ac	2016-08-17 19:27:32.396923386 +0200
+@@ -81,7 +81,7 @@
+ 
+ AC_HEADER_STDC
+ AC_HEADER_SYS_WAIT
+-AC_CHECK_HEADERS([inttypes.h libintl.h limits.h locale.h malloc.h netinet/in.h regex.h stddef.h stdlib.h string.h strings.h unistd.h])
++AC_CHECK_HEADERS([inttypes.h libintl.h limits.h locale.h malloc.h netinet/in.h regex.h stddef.h stdlib.h string.h strings.h unistd.h sys/params.h sys/types.h sys/stat.h])
+ 
+ # checks for libraries
+ 
+--- flex-2.6.0/src/flexdef.h.orig	2016-08-17 19:24:55.088294902 +0200
++++ flex-2.6.0/src/flexdef.h	2016-08-17 19:25:04.927835334 +0200
+@@ -81,6 +81,12 @@
+ #ifdef HAVE_SYS_PARAMS_H
+ #include <sys/params.h>
+ #endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
+ #ifdef HAVE_SYS_WAIT_H
+ #include <sys/wait.h>
+ #endif
