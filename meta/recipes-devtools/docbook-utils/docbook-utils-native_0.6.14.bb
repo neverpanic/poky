@@ -7,11 +7,12 @@ LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 DEPENDS = "openjade-native sgmlspl-native docbook-dsssl-stylesheets-native docbook-sgml-dtd-3.1-native"
 
-PR = "r3"
+PR = "r4"
 
 SRC_URI = "\
 	ftp://sources.redhat.com/pub/docbook-tools/new-trials/SOURCES/docbook-utils-${PV}.tar.gz \
 	file://re.patch \
+	file://relocatable-jw.patch \
 "
 
 SRC_URI[md5sum] = "6b41b18c365c01f225bc417cf632d81c"
@@ -22,12 +23,11 @@ inherit autotools native
 do_configure_prepend() {
 	# Fix hard-coded references to /etc/sgml
 	if [ ! -e ${S}/.sed_done ]; then
-		sed -i -e "s|/etc/sgml|${sysconfdir}/sgml|g" ${S}/bin/jw.in
-		sed -i -e "s|/etc/sgml|${sysconfdir}/sgml|g" ${S}/doc/man/Makefile.am
-		sed -i -e "s|/etc/sgml|${sysconfdir}/sgml|g" ${S}/doc/HTML/Makefile.am
+		sed -i -e "s|/etc/sgml|${STAGING_ETCDIR_NATIVE}/sgml|g" ${S}/doc/man/Makefile.am
+		sed -i -e "s|/etc/sgml|${STAGING_ETCDIR_NATIVE}/sgml|g" ${S}/doc/HTML/Makefile.am
 
 		# Point jw to the native sysroot catalog
-		sed -i -e 's|^SGML_EXTRA_CATALOGS=""|SGML_EXTRA_CATALOGS=":${sysconfdir}/sgml/catalog"|g' ${S}/bin/jw.in
+		sed -i -e 's|^SGML_EXTRA_CATALOGS=""|SGML_EXTRA_CATALOGS=":#prefix#/../etc/sgml/catalog"|g' ${S}/bin/jw.in
 		touch ${S}/.sed_done
 	fi
 }

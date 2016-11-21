@@ -1,0 +1,33 @@
+Make bin/jw relocatable
+
+In order to move the installation prefix of docbook-utils around, modify bin/jw
+to compute the paths to SGML_BASE_DIR and SGML_CATALOGS_DIR at runtime from the
+path of the script itself.
+
+Upstream-Status: Pending
+--- docbook-utils-0.6.14/bin/jw.in.orig	2016-08-29 16:17:49.091637763 +0200
++++ docbook-utils-0.6.14/bin/jw.in	2016-08-29 16:33:16.116528760 +0200
+@@ -76,8 +76,8 @@
+ SGML_EXTRA_CATALOGS=""
+ 
+ # Set SGML base directory and centralized catalogs directory
+-SGML_BASE_DIR="@prefix@/share/sgml"
+-SGML_CATALOGS_DIR="/etc/sgml"
++SGML_BASE_DIR="#prefix#/share/sgml"
++SGML_CATALOGS_DIR="#prefix#/../etc/sgml"
+ if [ -f "$SGML_CONF" ]
+ then
+   RE='^[[:space:]]*SGML_BASE_DIR[[:space:]]*=[[:space:]]*'
+@@ -86,6 +86,12 @@
+   SGML_CATALOGS_DIR=`grep $RE $SGML_CONF | sed "s/$RE//"`
+ fi
+ 
++# Support relocated installations of SGML
++_prefix=$(dirname "$0")/$(realpath --canonicalize-missing --relative-to="@bindir@" "@prefix@")
++SGML_BASE_DIR=$(echo "$SGML_BASE_DIR" | sed -e "s|#prefix#|${_prefix}|g")
++SGML_CATALOGS_DIR=$(echo "$SGML_CATALOGS_DIR" | sed -e "s|#prefix#|${_prefix}|g")
++SGML_EXTRA_CATALOGS=$(echo "$SGML_EXTRA_CATALOGS" | sed -e "s|#prefix#|${_prefix}|g")
++
+ # Set frontend to use
+ SGML_FRONTEND="$SGML_BASE_DIR/docbook/utils-@VERSION@/frontends/docbook"
+ 
