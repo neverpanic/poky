@@ -362,6 +362,40 @@ autotools_do_install() {
 	fi
 }
 
+python autotools_fix_lafile_paths () {
+    import re
+    import shlex
+    import pipes
+
+    destdir = d.getVar('D', True)
+    regex = re.compile(r"^dependency_libs='.*'$")
+
+    # Find all .la files and remove occurrences of ${STAGING_DIR} from their
+    # dependency_libs field; libtool adds all LDFLAGS, but -L${STAGING_DIR} is
+    # a path in ${WORKDIR} with isolated-sysroots enabled which is (a) useless
+    # and (b) triggers a QA error.
+    for root, dirs, files in os.walk(destdir):
+        for file in files:
+            if file.endswith(".la"):
+                path = os.path.join(root, file)
+                print("autotools_fix_lafile_paths: processing {}".format(path))
+                modified_lines = list()
+                with open(path) as f:
+                    for line in f:
+                        matches = regex.match(line)
+                        if matches:
+                            modified_line = "dependency_libs=''\n"
+                            modified_lines.append(modified_line)
+                            print("autotools_fix_lafile_paths: fixing line:\n  old: {}\n  new: {}".format(
+                                line.strip(), modified_line.strip()))
+                        else:
+                            modified_lines.append(line)
+                with open(path, "w") as wf:
+                    wf.writelines(modified_lines)
+}
+
+do_install[postfuncs] += "autotools_fix_lafile_paths"
+
 inherit siteconfig
 
 EXPORT_FUNCTIONS do_configure do_compile do_install
