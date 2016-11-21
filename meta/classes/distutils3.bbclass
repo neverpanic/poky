@@ -25,9 +25,9 @@ distutils3_stage_headers() {
 distutils3_stage_headers[vardepsexclude] = "MACHINE"
 
 distutils3_stage_all() {
+        install -d ${STAGING_DIR_HOST}${PYTHON_SITEPACKAGES_DIR}
         STAGING_INCDIR=${STAGING_INCDIR} \
         STAGING_LIBDIR=${STAGING_LIBDIR} \
-        install -d ${STAGING_DIR_HOST}${PYTHON_SITEPACKAGES_DIR}
         PYTHONPATH=${STAGING_DIR_HOST}${PYTHON_SITEPACKAGES_DIR} \
         ${STAGING_BINDIR_NATIVE}/${PYTHON_PN}-native/${PYTHON_PN} setup.py install ${DISTUTILS_STAGE_ALL_ARGS} || \
         bbfatal_log "${PYTHON_PN} setup.py install (stage) execution failed."
