@@ -11,6 +11,7 @@ import select
 import errno
 import signal
 import pickle
+import subprocess
 from multiprocessing import Lock
 
 if sys.getfilesystemencoding() != "utf-8":
@@ -114,6 +115,63 @@ def sigterm_handler(signum, frame):
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     os.killpg(0, signal.SIGTERM)
     sys.exit()
+
+def copyhardlinktree_error(src, dst):
+    """
+    Hardlink all files in src to dst when possible, otherwise copy. If the
+    target exists already, fail.
+    """
+    bb.utils.mkdirhier(dst)
+    if not os.path.exists(src):
+        return
+    if os.path.isdir(src) and not len(os.listdir(src)):
+        return
+
+    try:
+        if (os.stat(src).st_dev ==  os.stat(dst).st_dev):
+            # Need to copy directories only with tar first since cp will error if two
+            # writers try and create a directory at the same time
+            cmd = 'cd %s; find . -type d -print | tar -cf - -C %s -p --no-recursion --files-from - | tar -xf - -C %s' % (src, src, dst)
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            # FIXME -u replaces existing files unconditionally
+            cmd = 'cd %s; find . -print0 | cpio --null -pdl -u %s' % (src, dst)
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        else:
+            # We could use something like shutil.copytree here but it turns out to
+            # to be slow. It takes twice as long copying to an empty directory.
+            # If dst already has contents performance can be 15 time slower
+            # This way we also preserve hardlinks between files in the tree.
+
+            cmd = 'tar -cf - -C %s -p . | tar -xkf - -C %s' % (src, dst)
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as cpe:
+        bb.error("Failed command output was: %s" % cpe.output)
+        raise cpe
+
+def prepare_isolated_sysroot(the_data, taskdepdata):
+    """
+    Hardlink declared dependencies in the recipe-specific sysroot. If
+    PRIVATE_STAGING_DIR or ISOLATED_STAGING_DIR are not set, returns
+    immediately. Otherwise, taskdepdata is scanned for do_populate_sysroot
+    dependencies and each dependency is hardlinked from
+    ${ISOALTED_STAGING_DIR}/${DEPENDENCY_PN} into ${PRIVATE_STAGING_DIR}.
+    """
+    private_staging = the_data.getVar('PRIVATE_STAGING_DIR', True)
+    isolated_staging = the_data.getVar('ISOLATED_STAGING_DIR', True)
+
+    sysroot_deps = []
+    if taskdepdata:
+        for dep, depdata in taskdepdata.items():
+            if depdata[1] in ("do_populate_sysroot", "do_package", "do_packagedata"):
+                sysroot_deps.append(depdata[0])
+
+    bb.warn("Populating sysroot for {} with dependencies {}".format(the_data.getVar('PN', True), repr(sysroot_deps)))
+    # Populate staging directory
+    for dep_pn in sysroot_deps:
+        lockfile = os.path.join(the_data.getVar('T', True), "lock.private_sysroot." + dep_pn)
+        with bb.utils.fileslocked([lockfile]):
+            src = os.path.join(isolated_staging, dep_pn)
+            copyhardlinktree_error(src, private_staging)
 
 def fork_off_task(cfg, data, databuilder, workerdata, fn, task, taskname, appends, taskdepdata, quieterrors=False):
     # We need to setup the environment BEFORE the fork, since
@@ -233,6 +291,8 @@ def fork_off_task(cfg, data, databuilder, workerdata, fn, task, taskname, append
 
                 if quieterrors:
                     the_data.setVarFlag(taskname, "quieterrors", "1")
+
+                prepare_isolated_sysroot(the_data, taskdepdata)
 
             except Exception as exc:
                 if not quieterrors:

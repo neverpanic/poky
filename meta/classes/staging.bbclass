@@ -232,7 +232,7 @@ do_populate_sysroot[vardepsexclude] += "MULTI_PROVIDER_WHITELIST"
 SSTATETASKS += "do_populate_sysroot"
 do_populate_sysroot[cleandirs] = "${SYSROOT_DESTDIR}"
 do_populate_sysroot[sstate-inputdirs] = "${SYSROOT_DESTDIR}"
-do_populate_sysroot[sstate-outputdirs] = "${STAGING_DIR_HOST}/"
+do_populate_sysroot[sstate-outputdirs] = "${WRITE_STAGING_DIR_HOST}/"
 do_populate_sysroot[stamp-extra-info] = "${MACHINE}"
 
 python do_populate_sysroot_setscene () {

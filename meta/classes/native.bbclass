@@ -48,6 +48,8 @@ LDFLAGS_build-darwin = "-L${STAGING_LIBDIR_NATIVE} "
 
 STAGING_BINDIR = "${STAGING_BINDIR_NATIVE}"
 STAGING_BINDIR_CROSS = "${STAGING_BINDIR_NATIVE}"
+WRITE_STAGING_BINDIR = "${WRITE_STAGING_BINDIR_NATIVE}"
+WRITE_STAGING_BINDIR_CROSS = "${WRITE_STAGING_BINDIR_NATIVE}"
 
 # native pkg doesn't need the TOOLCHAIN_OPTIONS.
 TOOLCHAIN_OPTIONS = ""
@@ -74,16 +76,22 @@ export STRIP = "${BUILD_STRIP}"
 export NM = "${BUILD_NM}"
 
 # Path prefixes
-base_prefix = "${STAGING_DIR_NATIVE}"
-prefix = "${STAGING_DIR_NATIVE}${prefix_native}"
-exec_prefix = "${STAGING_DIR_NATIVE}${prefix_native}"
+# =============
+# We *must* configure for the location where the files will actually be on disk
+# later on, because software will try to find its files in this path. However,
+# we will re-locate these directories later on into ${STAGING_DIR}, which will
+# be in ${WORKDIR} if isolated sysroots are enabled. For this reason, we'll
+# explicitly set the $STAGING_*DIR variables to paths in ${STAGING_DIR}.
+base_prefix = "${WRITE_STAGING_DIR_NATIVE}"
+prefix = "${WRITE_STAGING_DIR_NATIVE}${prefix_native}"
+exec_prefix = "${WRITE_STAGING_DIR_NATIVE}${prefix_native}"
 
-bindir = "${STAGING_BINDIR_NATIVE}"
-sbindir = "${STAGING_SBINDIR_NATIVE}"
-libdir = "${STAGING_LIBDIR_NATIVE}"
-includedir = "${STAGING_INCDIR_NATIVE}"
-sysconfdir = "${STAGING_ETCDIR_NATIVE}"
-datadir = "${STAGING_DATADIR_NATIVE}"
+bindir = "${WRITE_STAGING_BINDIR_NATIVE}"
+sbindir = "${WRITE_STAGING_SBINDIR_NATIVE}"
+libdir = "${WRITE_STAGING_LIBDIR_NATIVE}"
+includedir = "${WRITE_STAGING_INCDIR_NATIVE}"
+sysconfdir = "${WRITE_STAGING_ETCDIR_NATIVE}"
+datadir = "${WRITE_STAGING_DATADIR_NATIVE}"
 
 baselib = "lib"
 
@@ -95,13 +103,42 @@ bindir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 libdir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 libexecdir .= "${NATIVE_PACKAGE_PATH_SUFFIX}"
 
-do_populate_sysroot[sstate-inputdirs] = "${SYSROOT_DESTDIR}/${STAGING_DIR_NATIVE}/"
-do_populate_sysroot[sstate-outputdirs] = "${STAGING_DIR_NATIVE}/"
+do_populate_sysroot[sstate-inputdirs] = "${SYSROOT_DESTDIR}/${WRITE_STAGING_DIR_NATIVE}/"
+do_populate_sysroot[sstate-outputdirs] = "${WRITE_STAGING_DIR_NATIVE}/"
 
-# Since we actually install these into situ there is no staging prefix
-STAGING_DIR_HOST = ""
-STAGING_DIR_TARGET = ""
-PKG_CONFIG_DIR = "${libdir}/pkgconfig"
+# With isolated sysroots, $prefix (=$WRITE_STAGING_DIR_NATIVE) does not equal
+# $STAGING_DIR_NATIVE; For example, gnu-config-native would install in its
+# $WRITE_STAGING_DIR_NATIVE (isolated-sysroots/gnu-config-native) but m4-native
+# would expect files installed by gnu-config-native in $STAGING_DATADIR, which
+# is defined as $STAGING_DIR_HOST/$datadir. $STAGING_DIR_HOST would be empty
+# and $datadir would be $WRITE_STAGING_DATADIR_NATIVE, but since that is
+# actually isolated-sysroots/m4-native in the context of the m4-native recipe,
+# m4 would fail to find the files installed by gnu-config-native.
+#
+# To work around this issue, set STAGING_*DIR to the paths below $STAGING_DIR
+# where m4 would find gnu-config-native's files.
+STAGING_DIR_HOST            = "${STAGING_DIR_NATIVE}"
+STAGING_BINDIR              = "${STAGING_BINDIR_NATIVE}"
+STAGING_LIBDIR              = "${STAGING_LIBDIR_NATIVE}"
+STAGING_LIBEXECDIR          = "${STAGING_LIBEXECDIR_NATIVE}"
+STAGING_BASELIBDIR          = "${STAGING_BASE_LIBDIR_NATIVE}"
+STAGING_INCDIR              = "${STAGING_INCDIR_NATIVE}"
+STAGING_DATADIR             = "${STAGING_DATADIR_NATIVE}"
+STAGING_EXECPREFIXDIR       = "${STAGING_DIR_NATIVE}${prefix_native}"
+STAGING_DIR_TARGET          = "${STAGING_DIR_NATIVE}"
+
+WRITE_STAGING_DIR_HOST      = "${WRITE_STAGING_DIR_NATIVE}"
+WRITE_STAGING_BINDIR        = "${WRITE_STAGING_BINDIR_NATIVE}"
+WRITE_STAGING_LIBDIR        = "${WRITE_STAGING_LIBDIR_NATIVE}"
+WRITE_STAGING_LIBEXECDIR    = "${WRITE_STAGING_LIBEXECDIR_NATIVE}"
+WRITE_STAGING_BASELIBDIR    = "${WRITE_STAGING_BASE_LIBDIR_NATIVE}"
+WRITE_STAGING_INCDIR        = "${WRITE_STAGING_INCDIR_NATIVE}"
+WRITE_STAGING_DATADIR       = "${WRITE_STAGING_DATADIR_NATIVE}"
+WRITE_STAGING_EXECPREFIXDIR = "${WRITE_STAGING_DIR_NATIVE}${prefix_native}"
+WRITE_STAGING_DIR_TARGET    = "${WRITE_STAGING_DIR_NATIVE}"
+
+
+PKG_CONFIG_DIR = "${STAGING_DIR_NATIVE}${libdir_native}/pkgconfig"
 
 EXTRA_NATIVE_PKGCONFIG_PATH ?= ""
 PKG_CONFIG_PATH .= "${EXTRA_NATIVE_PKGCONFIG_PATH}"
