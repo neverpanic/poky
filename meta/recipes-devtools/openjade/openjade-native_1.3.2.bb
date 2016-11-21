@@ -84,9 +84,6 @@ do_install() {
 	install -m 644 dsssl/*.dsl ${D}${datadir}/sgml/openjade-${PV}
 	install -m 644 dsssl/*.sgm ${D}${datadir}/sgml/openjade-${PV}
 
-	install -d ${datadir}/sgml/openjade-${PV}
-	install -m 644 dsssl/catalog ${datadir}/sgml/openjade-${PV}/catalog
-
 	install -d ${D}${sysconfdir}/sgml
 	echo "CATALOG ${datadir}/sgml/openjade-${PV}/catalog" > \
 		${D}${sysconfdir}/sgml/openjade-${PV}.cat
