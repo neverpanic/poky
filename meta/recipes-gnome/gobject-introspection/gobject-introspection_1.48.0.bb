@@ -14,6 +14,7 @@ SRC_URI = "${GNOME_MIRROR}/${BPN}/1.48/${BPN}-${PV}.tar.xz \
            file://0003-giscanner-add-use-binary-wrapper-option.patch \
            file://0004-giscanner-add-a-use-ldd-wrapper-option.patch \
            file://0005-Prefix-pkg-config-paths-with-PKG_CONFIG_SYSROOT_DIR-.patch \
+           file://0006-g-ir-tools-use-relative-paths.patch \
            "
 SRC_URI[md5sum] = "01301fa9019667d48e927353e08bc218"
 SRC_URI[sha256sum] = "fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877"
@@ -43,15 +44,20 @@ do_configure_prepend_class-native() {
         sed -i -e '1s,#!.*,#!${USRBINPATH}/env python3,' ${S}/tools/g-ir-tool-template.in
 }
 
+bindir_to_datadir = "${@os.path.relpath(d.getVar('STAGING_DATADIR', True), d.getVar('STAGING_BINDIR', True))}"
+bindir_to_root = "${@os.path.relpath(d.getVar('STAGING_DIR_HOST', True), d.getVar('STAGING_BINDIR', True))}"
 do_configure_prepend_class-target() {
         # Write out a qemu wrapper that will be given to gi-scanner so that it
         # can run target helper binaries through that.
-        qemu_binary="${@qemu_wrapper_cmdline(d, '$STAGING_DIR_HOST', ['\$GIR_EXTRA_LIBS_PATH','.libs','$STAGING_DIR_HOST/${libdir}','$STAGING_DIR_HOST/${base_libdir}'])}"
+        qemu_binary="${@qemu_wrapper_cmdline(d, '"\$root"', ['\$GIR_EXTRA_LIBS_PATH','.libs','"\$root${libdir}"','"\$root${base_libdir}"'])}"
         cat > ${B}/g-ir-scanner-qemuwrapper << EOF
 #!/bin/sh
 # Use a modules directory which doesn't exist so we don't load random things
 # which may then get deleted (or their dependencies) and potentially segfault
 export GIO_MODULE_DIR=${STAGING_LIBDIR}/gio/modules-dummy
+
+# Allow overriding root when running inside the gobject-introspection build
+root=\${g_ir_qemuwrapper_root:-\$(dirname "\$(readlink -f "\$0")")/${bindir_to_root}}
 
 $qemu_binary "\$@"
 if [ \$? -ne 0 ]; then
@@ -71,7 +77,13 @@ EOF
 # This prevents g-ir-scanner from writing cache data to $HOME
 export GI_SCANNER_DISABLE_CACHE=1
 
-g-ir-scanner --use-binary-wrapper=${STAGING_BINDIR}/g-ir-scanner-qemuwrapper --use-ldd-wrapper=${STAGING_BINDIR}/g-ir-scanner-lddwrapper --add-include-path=${STAGING_DATADIR}/gir-1.0 "\$@"
+bindir=\$(dirname "\$(readlink -f "\$0")")
+
+g-ir-scanner \\
+    --use-binary-wrapper="\$bindir/g-ir-scanner-qemuwrapper" \\
+    --use-ldd-wrapper="\$bindir/g-ir-scanner-lddwrapper" \\
+    --add-include-path="\$bindir/${bindir_to_datadir}/gir-1.0" \\
+    "\$@"
 EOF
         chmod +x ${B}/g-ir-scanner-wrapper
 
@@ -79,7 +91,10 @@ EOF
         # g-ir-compiler writes out the raw content of a C struct to disk, and therefore is architecture dependent.
         cat > ${B}/g-ir-compiler-wrapper << EOF
 #!/bin/sh
-${STAGING_BINDIR}/g-ir-scanner-qemuwrapper ${STAGING_BINDIR}/g-ir-compiler "\$@"
+
+bindir=\$(dirname "\$(readlink -f "\$0")")
+
+"\$bindir/g-ir-scanner-qemuwrapper" "\$bindir/g-ir-compiler" "\$@"
 EOF
         chmod +x ${B}/g-ir-compiler-wrapper
 
@@ -87,7 +102,10 @@ EOF
         # for a different architecture
         cat > ${B}/g-ir-scanner-lddwrapper << EOF
 #!/bin/sh
-prelink-rtld --root=$STAGING_DIR_HOST "\$@"
+
+root=\${g_ir_qemuwrapper_root:-\$(dirname "\$(readlink -f "\$0")")/${bindir_to_root}}
+
+prelink-rtld --root="\$root" "\$@"
 EOF
         chmod +x ${B}/g-ir-scanner-lddwrapper
 
@@ -113,6 +131,9 @@ do_compile_prepend() {
 
         # Needed to run g-ir unit tests, which won't be able to find the built libraries otherwise
         export GIR_EXTRA_LIBS_PATH=$B/.libs
+
+        # required to run the wrappers inside the build directory
+        export g_ir_qemuwrapper_root=${STAGING_DIR_HOST}
 }
 
 # Our wrappers need to be available system-wide, because they will be used 

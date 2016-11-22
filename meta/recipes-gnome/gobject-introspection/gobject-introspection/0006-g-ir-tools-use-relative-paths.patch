@@ -1,0 +1,33 @@
+g-ir-tools: Use relative paths
+
+Do not hardcode the sysroot path to fix running relocated g-ir-tools.
+
+Upstream-Status: Pending
+Signed-off-by: Clemens Lang <clemens.lang@bmw-carit.de>
+--- gobject-introspection-1.48.0/tools/g-ir-tool-template.in.orig	2016-08-25 17:55:23.485776049 +0200
++++ gobject-introspection-1.48.0/tools/g-ir-tool-template.in	2016-08-25 17:58:24.681270970 +0200
+@@ -51,8 +51,11 @@
+     datadir = os.path.join(os.path.dirname(__file__), '..', 'share')
+     pylibdir = os.path.join(os.path.dirname(__file__), '..', 'lib', 'gobject-introspection')
+ else:
+-    datadir = "@datarootdir@"
+-    pylibdir = os.path.join('@libdir@', 'gobject-introspection')
++    datadir = os.path.join(os.path.dirname(__file__),
++                           os.path.relpath("@datarootdir@", "@bindir@"))
++    pylibdir = os.path.join(os.path.dirname(__file__),
++                            os.path.relpath("@libdir@", "@bindir@"),
++                            'gobject-introspection')
+ 
+ builtins.__dict__['DATADIR'] = datadir
+ 
+--- gobject-introspection-1.48.0/Makefile-tools.am.orig	2016-08-25 18:04:38.615736609 +0200
++++ gobject-introspection-1.48.0/Makefile-tools.am	2016-08-25 18:04:59.242773748 +0200
+@@ -8,7 +8,7 @@
+ EXTRA_DIST += 				\
+ 	tools/g-ir-tool-template.in
+ 
+-TOOL_SUBSTITUTIONS = -e s,@libdir\@,$(libdir), -e s,@datarootdir\@,$(datarootdir), -e s,@PYTHON\@,$(PYTHON),
++TOOL_SUBSTITUTIONS = -e s,@bindir\@,$(bindir), -e s,@libdir\@,$(libdir), -e s,@datarootdir\@,$(datarootdir), -e s,@PYTHON\@,$(PYTHON),
+ 
+ g-ir-scanner: tools/g-ir-tool-template.in _giscanner.la Makefile
+ 	$(AM_V_GEN) sed $(TOOL_SUBSTITUTIONS) -e s,@TOOL_MODULE\@,scannermain, -e s,@TOOL_FUNCTION\@,scanner_main, $< > $@.tmp && mv $@.tmp $@
