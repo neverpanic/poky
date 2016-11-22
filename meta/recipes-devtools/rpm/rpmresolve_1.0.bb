@@ -19,11 +19,17 @@ do_install() {
 	install -m 0755 rpmresolve ${D}${bindir}
 }
 
+def bindir_native_relpath(d, varname):
+    return os.path.relpath(d.getVar(varname, True), d.getVar('bindir_native', True))
+
+native_bindir_to_libdir = "${@bindir_native_relpath(d, 'libdir_native')}"
+native_bindir_to_etcdir = "${@bindir_native_relpath(d, 'sysconfdir_native')}"
+native_bindir_to_datadir = "${@bindir_native_relpath(d, 'datadir_native')}"
 do_install_append_class-native() {
 	create_wrapper ${D}/${bindir}/rpmresolve \
-			RPM_USRLIBRPM=${STAGING_LIBDIR_NATIVE}/rpm \
-			RPM_ETCRPM=${STAGING_ETCDIR_NATIVE}/rpm \
-			RPM_LOCALEDIRRPM=${STAGING_DATADIR_NATIVE}/locale
+			'RPM_USRLIBRPM=$(realpath "$(dirname "$realpath")/${native_bindir_to_libdir}")/rpm' \
+			'RPM_ETCRPM=$(realpath "$(dirname "$realpath")/${native_bindir_to_etcdir}")/rpm' \
+			'RPM_LOCALEDIRRPM=$(realpath "$(dirname "$realpath")/${native_bindir_to_datadir}")/locale'
 }
 
 BBCLASSEXTEND = "native nativesdk"
