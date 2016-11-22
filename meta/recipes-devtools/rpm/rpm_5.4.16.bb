@@ -521,7 +521,8 @@ do_configure() {
 	echo "all:" > ${S}/tests/Makefile.am
 	sed -e 's/@__MKDIR_P@/%{__mkdir} -p/' -i ${S}/macros/macros.in
 
-	( cd ${S}; ${S}/autogen.sh )
+	AUTOV=`automake --version | sed -e '1{s/.* //;s/\.[0-9]\+$//};q'`
+	( cd ${S}; ACLOCAL_PATH="${ACLOCALDIR}:${STAGING_DATADIR_NATIVE}/aclocal-$AUTOV" ${S}/autogen.sh )
 
 	# NASTY hack to make sure configure files the right pkg-config file...
 	sed -e 's/pkg-config --exists uuid/pkg-config --exists ossp-uuid/g' \
