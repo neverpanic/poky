@@ -39,7 +39,7 @@ do_configure_append() {
 	fi
 }
 do_configure_prepend_class-native() {
-	mkdir ${B}/build
+	mkdir -p ${B}/build
 	cp ${STAGING_DATADIR_NATIVE}/apr/apr_rules.mk ${B}/build/rules.mk
 }
 do_configure_append_class-native() {
