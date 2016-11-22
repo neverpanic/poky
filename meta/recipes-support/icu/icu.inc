@@ -12,6 +12,7 @@ DEPENDS_class-native = ""
 S = "${WORKDIR}/icu/source"
 SPDX_S = "${WORKDIR}/icu"
 STAGING_ICU_DIR_NATIVE = "${STAGING_DATADIR_NATIVE}/${BPN}/${PV}"
+WRITE_STAGING_ICU_DIR_NATIVE = "${WRITE_STAGING_DATADIR_NATIVE}/${BPN}/${PV}"
 
 CPPFLAGS_append_libc-uclibc = " -DU_TIMEZONE=0"
 
@@ -28,12 +29,12 @@ EXTRA_OECONF_class-nativesdk = "--with-cross-build=${STAGING_ICU_DIR_NATIVE}"
 
 PREPROCESS_RELOCATE_DIRS = "${datadir}/${BPN}/${PV}"
 do_install_append_class-native() {
-	mkdir -p ${D}/${STAGING_ICU_DIR_NATIVE}/config
-	cp -r ${B}/config/icucross.mk ${D}/${STAGING_ICU_DIR_NATIVE}/config
-	cp -r ${B}/config/icucross.inc ${D}/${STAGING_ICU_DIR_NATIVE}/config
-	cp -r ${B}/lib ${D}/${STAGING_ICU_DIR_NATIVE}
-	cp -r ${B}/bin ${D}/${STAGING_ICU_DIR_NATIVE}
-	cp -r ${B}/tools ${D}/${STAGING_ICU_DIR_NATIVE}
+	mkdir -p ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}/config
+	cp -r ${B}/config/icucross.mk ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}/config
+	cp -r ${B}/config/icucross.inc ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}/config
+	cp -r ${B}/lib ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}
+	cp -r ${B}/bin ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}
+	cp -r ${B}/tools ${D}/${WRITE_STAGING_ICU_DIR_NATIVE}
 }
 
 PACKAGES =+ "libicudata libicuuc libicui18n libicule libiculx libicutu libicuio"
