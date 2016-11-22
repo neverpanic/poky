@@ -1,0 +1,21 @@
+Distutils: Allow empty LIBDIR
+
+For builds in isolated sysroots, we clear out LIBDIR to prevent builds from
+looking in other build's sysroots. The library directory is not needed as
+a build argument because it is in the default search path of our
+cross-compiler.
+
+Upstream-Status: Inappropriate [configuration]
+--- Python-2.7.11/Lib/distutils/command/build_ext.py.orig	2016-08-31 18:18:40.908934116 +0200
++++ Python-2.7.11/Lib/distutils/command/build_ext.py	2016-08-31 18:19:27.562737752 +0200
+@@ -239,7 +239,9 @@
+         if (sysconfig.get_config_var('Py_ENABLE_SHARED')):
+             if not sysconfig.python_build:
+                 # building third party extensions
+-                self.library_dirs.append(sysconfig.get_config_var('LIBDIR'))
++                ldir = sysconfig.get_config_var('LIBDIR')
++                if ldir:
++                    self.library_dirs.append(ldir)
+             else:
+                 # building python standard extensions
+                 self.library_dirs.append('.')

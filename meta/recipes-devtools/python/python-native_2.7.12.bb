@@ -17,6 +17,8 @@ SRC_URI += "\
             file://builddir.patch \
             file://parallel-makeinst-create-bindir.patch \
             file://revert_use_of_sysconfigdata.patch \
+            file://read-pyconfig.h-from-libdir.patch \
+            file://distutils-allow-emptying-libdir.patch \
            "
 
 S = "${WORKDIR}/Python-${PV}"
@@ -36,7 +38,8 @@ EXTRA_OEMAKE = '\
 '
 
 do_configure_append() {
-	autoreconf --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
+	# $ACLOCAL is set in autotools.bbclass' autotools_do_configure and is needed for libffi to find libtool macros
+	ACLOCAL="$ACLOCAL" autoreconf --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
 }
 
 do_install() {
@@ -58,4 +61,12 @@ do_install() {
 	# We don't want modules in ~/.local being used in preference to those
 	# installed in the native sysroot, so disable user site support.
 	sed -i -e 's,^\(ENABLE_USER_SITE = \).*,\1False,' ${D}${libdir}/python${PYTHON_MAJMIN}/site.py
+
+	# The pyconfig.h header is installation-specific and needs to be handled by
+	# oe_multilib_header for the target python, but python-config also reads
+	# pyconfig.h to find out how python was configured and does not follow
+	# #include directives. Install a separate copy of the header in
+	#   ${libdir}/python${PYTHON_MAJMIN}/config
+	# and patch the code used by python-config to read the header from there.
+	install -m 0644 ${D}${includedir}/python${PYTHON_MAJMIN}/pyconfig.h ${D}${libdir}/python${PYTHON_MAJMIN}/config/
 }

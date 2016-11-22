@@ -37,8 +37,9 @@ CONFIGUREOPTS += " --with-system-ffi "
 EXTRA_OECONF += "ac_cv_file__dev_ptmx=yes ac_cv_file__dev_ptc=no"
 
 do_configure_append() {
-	rm -f ${S}/Makefile.orig
-        autoreconf -Wcross --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
+    rm -f ${S}/Makefile.orig
+    # $ACLOCAL is set in autotools.bbclass' autotools_do_configure and is needed for libffi to find libtool macros
+    ACLOCAL="$ACLOCAL" autoreconf -Wcross --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
 }
 
 do_compile() {
@@ -109,11 +110,19 @@ do_install() {
 		DESTDIR=${D} LIBDIR=${libdir} install
 
 	install -m 0644 Makefile.sysroot ${D}/${libdir}/python${PYTHON_MAJMIN}/config/Makefile
+	sed -i -e 's,^LIBDIR=.*,LIBDIR=,g' ${D}/${libdir}/python${PYTHON_MAJMIN}/config/Makefile
 
 	if [ -e ${WORKDIR}/sitecustomize.py ]; then
 		install -m 0644 ${WORKDIR}/sitecustomize.py ${D}/${libdir}/python${PYTHON_MAJMIN}
 	fi
 
+	# The pyconfig.h header is installation-specific and needs to be handled by
+	# oe_multilib_header, but python-config also reads pyconfig.h to find out
+	# how python was configured and does not follow #include directives.
+	# Install a separate copy of the header in
+	#   ${libdir}/python${PYTHON_MAJMIN}/config
+	# and patch the code used by python-config to read the header from there.
+	install -m 0644 ${D}${includedir}/python${PYTHON_MAJMIN}/pyconfig.h ${D}${libdir}/python${PYTHON_MAJMIN}/config/
 	oe_multilib_header python${PYTHON_MAJMIN}/pyconfig.h
 }
 
