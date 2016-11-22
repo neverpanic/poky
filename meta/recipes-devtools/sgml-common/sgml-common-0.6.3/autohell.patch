@@ -15,19 +15,18 @@ Signed-off-by: Scott Garman <scott.a.garman@intel.com>
  EXTRA_DIST =  install-catalog.in $(primitive_scripts)
 --- /dev/null	2003-09-23 19:59:22.000000000 +0200
 +++ sgml-common-0.6.3/bin/sgmlwhich.in	2004-06-17 11:51:11.000000000 +0200
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,6 @@
 +#!/bin/sh
 +# Location of the main configuration file for consistency with non-LSB platforms
 +# Send any comments to Eric Bischoff <eric@caldera.de>
 +# This program is under GPL license. See LICENSE file for details.
 +
-+echo "@sysconfdir@/sgml/sgml.conf"
-+# Simple, isn't it? ;-)
++echo "$(dirname "$0")/$(realpath --relative-to="@bindir@" "@sysconfdir@")/sgml/sgml.conf"
 --- /dev/null	2003-09-23 19:59:22.000000000 +0200
 +++ sgml-common-0.6.3/config/sgml.conf.in	2004-06-17 11:51:11.000000000 +0200
 @@ -0,0 +1,2 @@
-+SGML_BASE_DIR=@datadir@/sgml
-+SGML_CATALOGS_DIR=@sysconfdir@/sgml
++SGML_BASE_DIR=#prefix#/@rel_datadir@/sgml
++SGML_CATALOGS_DIR=#prefix#/@rel_sysconfdir@/sgml
 --- sgml-common-0.6.3/configure.in~autohell.patch	2001-05-25 18:40:54.000000000 +0200
 +++ sgml-common-0.6.3/configure.in	2004-06-17 11:53:22.000000000 +0200
 @@ -3,11 +3,6 @@
@@ -42,8 +41,20 @@ Signed-off-by: Scott Garman <scott.a.garman@intel.com>
  dnl Checks for libraries.
  
  dnl Checks for header files.
-@@ -18,6 +13,5 @@
- 
+@@ -15,9 +10,18 @@
+
+ dnl Checks for library functions.
+
++AC_MSG_CHECKING([for relative sysconfdir path])
++rel_sysconfdir=$(realpath --canonicalize-missing --relative-to="$prefix" "$sysconfdir")
++AC_MSG_RESULT([$rel_sysconfdir])
++AC_SUBST([rel_sysconfdir])
++
++AC_MSG_CHECKING([for relative datadir path])
++rel_datadir=$(realpath --canonicalize-missing --relative-to="$prefix" "$datadir")
++AC_MSG_RESULT([$rel_datadir])
++AC_SUBST([rel_datadir])
++ 
  AC_OUTPUT(Makefile \
            bin/Makefile bin/install-catalog \
 -          config/Makefile \
