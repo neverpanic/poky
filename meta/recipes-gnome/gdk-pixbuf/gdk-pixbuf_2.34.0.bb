@@ -80,15 +80,17 @@ do_install_append() {
 do_install_append_class-native() {
 	find ${D}${libdir} -name "libpixbufloader-*.la" -exec rm \{\} \;
 
+	bindir_to_libdir=${@os.path.relpath(d.getVar('STAGING_LIBDIR_NATIVE', True), d.getVar('STAGING_BINDIR_NATIVE', True))}
+
 	create_wrapper ${D}/${bindir}/gdk-pixbuf-csource \
-		GDK_PIXBUF_MODULE_FILE=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/${LIBV}/loaders.cache
+		GDK_PIXBUF_MODULE_FILE='$(dirname "$realpath")'/$bindir_to_libdir/gdk-pixbuf-2.0/${LIBV}/loaders.cache
 
 	create_wrapper ${D}/${bindir}/gdk-pixbuf-pixdata \
-		GDK_PIXBUF_MODULE_FILE=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/${LIBV}/loaders.cache
+		GDK_PIXBUF_MODULE_FILE='$(dirname "$realpath")'/$bindir_to_libdir/gdk-pixbuf-2.0/${LIBV}/loaders.cache
 
 	create_wrapper ${D}/${libdir}/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders \
-		GDK_PIXBUF_MODULE_FILE=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/${LIBV}/loaders.cache \
-		GDK_PIXBUF_MODULEDIR=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/${LIBV}/loaders
+		GDK_PIXBUF_MODULE_FILE='$(dirname "$realpath")'/${LIBV}/loaders.cache \
+		GDK_PIXBUF_MODULEDIR='$(dirname "$realpath")'/${LIBV}/loaders
 }
 BBCLASSEXTEND = "native"
 

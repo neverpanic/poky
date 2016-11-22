@@ -22,6 +22,7 @@ CACHED_CONFIGUREVARS = "ac_cv_path_GDK_PIXBUF_QUERYLOADERS=${STAGING_LIBDIR_NATI
 # The older ld (2.22) on the host (Centos 6.5) doesn't have the
 # -Bsymbolic-functions option, we can disable it for native.
 EXTRA_OECONF_append_class-native = " --enable-Bsymbolic=auto"
+EXTRA_OEMAKE_append_class-native = " gdk_pixbuf_moduledir=${WRITE_STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/2.10.0/loaders"
 
 PACKAGECONFIG ??= "gdkpixbuf"
 # The gdk-pixbuf loader

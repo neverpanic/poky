@@ -46,7 +46,11 @@ python populate_packages_append() {
 }
 
 gdkpixbuf_complete() {
-	GDK_PIXBUF_FATAL_LOADER=1 ${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache || exit 1
+    # Do not populate pixbuf loader cache when isolated sysroots are used,
+    # because each separate sysroot needs its own cache.
+    if [ "${ISOLATED_SYSROOTS}" != "1" ]; then
+        GDK_PIXBUF_FATAL_LOADER=1 ${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders --update-cache || exit 1
+    fi
 }
 
 #

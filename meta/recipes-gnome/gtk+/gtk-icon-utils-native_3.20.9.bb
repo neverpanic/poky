@@ -53,8 +53,10 @@ do_install() {
 	install -m 0755 ${B}/gtk-update-icon-cache ${D}${bindir}
 	install -m 0755 ${B}/gtk-encode-symbolic-svg ${D}${bindir}
 
+	bindir_to_libdir=${@os.path.relpath(d.getVar('STAGING_LIBDIR_NATIVE', True), d.getVar('STAGING_BINDIR_NATIVE', True))}
+
 	create_wrapper ${D}/${bindir}/gtk-update-icon-cache \
-		GDK_PIXBUF_MODULE_FILE=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/2.10.0/loaders.cache
+		GDK_PIXBUF_MODULE_FILE='$(dirname "$realpath")'/$bindir_to_libdir/gdk-pixbuf-2.0/2.10.0/loaders.cache
 	create_wrapper ${D}/${bindir}/gtk-encode-symbolic-svg \
-		GDK_PIXBUF_MODULE_FILE=${STAGING_LIBDIR_NATIVE}/gdk-pixbuf-2.0/2.10.0/loaders.cache
+		GDK_PIXBUF_MODULE_FILE='$(dirname "$realpath")'/$bindir_to_libdir/gdk-pixbuf-2.0/2.10.0/loaders.cache
 }
