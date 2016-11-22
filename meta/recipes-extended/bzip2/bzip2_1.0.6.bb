@@ -31,7 +31,7 @@ ALTERNATIVE_PRIORITY = "100"
 ALTERNATIVE_${PN} = "bunzip2 bzcat"
 
 #install binaries to bzip2-native under sysroot for replacement-native
-EXTRA_OECONF_append_class-native = " --bindir=${STAGING_BINDIR_NATIVE}/${PN}"
+EXTRA_OECONF_append_class-native = " --bindir=${WRITE_STAGING_BINDIR_NATIVE}/${PN}"
 
 do_install_ptest () {
 	cp -f ${B}/Makefile ${D}${PTEST_PATH}/Makefile
