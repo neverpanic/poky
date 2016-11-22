@@ -1,0 +1,20 @@
+configure.in: Find AR using automake
+
+The configure script does not check for the 'ar' tool, which causes bc to
+always use 'ar' even if the environment contains an AR variable, for example
+for cross-compilation.
+
+Fix this by checking for ar using the automake macro AM_PROG_AR.
+
+Upstream-Status: Pending
+Signed-off-by: Clemens Lang <clemens.lang@bmw-carit.de>
+--- bc-1.06/configure.in.orig	2016-08-22 16:59:56.200916886 +0200
++++ bc-1.06/configure.in	2016-08-22 17:00:04.972499574 +0200
+@@ -18,6 +18,7 @@
+ AC_PROG_INSTALL
+ AC_PROG_RANLIB
+ AC_PROG_MAKE_SET
++AM_PROG_AR
+ 
+ AC_CHECK_HEADERS(stdarg.h stddef.h stdlib.h string.h limits.h unistd.h lib.h)
+ AC_C_CONST
