@@ -77,7 +77,8 @@ PYTHONLSBOPTS = ""
 
 do_configure_append() {
 	rm -f ${S}/Makefile.orig
-	autoreconf -Wcross --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
+	# $ACLOCAL is set in autotools.bbclass' autotools_do_configure and is needed for libffi to find libtool macros
+	ACLOCAL="$ACLOCAL" autoreconf -Wcross --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
 }
 
 do_compile() {

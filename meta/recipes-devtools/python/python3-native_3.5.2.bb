@@ -79,7 +79,9 @@ EXTRA_OEMAKE = '\
 PYTHONLSBOPTS = ""
 
 do_configure_append() {
-	autoreconf --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
+	# Use $ACLOCAL from autotools.bbclass, needed to locate ltdl.m4 with
+	# isolated sysroots
+	ACLOCAL="$ACLOCAL" autoreconf --verbose --install --force --exclude=autopoint ../Python-${PV}/Modules/_ctypes/libffi
 }
 
 do_install() {
