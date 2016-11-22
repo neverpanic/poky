@@ -45,11 +45,16 @@ FILES_${PN} += "${datadir}/aclocal/pkg.m4"
 # specifying an appropriate provide.
 RPROVIDES_${PN} += "pkgconfig(pkg-config)"
 
+def rel_pkg_config_path(root, searchpath):
+    components = searchpath.split(':')
+    return ":".join([os.path.relpath(x, root) for x in components])
+
 # Install a pkg-config-native wrapper that will use the native sysroot instead
 # of the MACHINE sysroot, for using pkg-config when building native tools.
 do_install_append_class-native () {
-    sed -e "s|@PATH_NATIVE@|${PKG_CONFIG_PATH}|" \
-        -e "s|@LIBDIR_NATIVE@|${PKG_CONFIG_LIBDIR}|" \
+    sed -e "s|@REL_PATH_NATIVE@|${@rel_pkg_config_path(d.getVar('STAGING_DIR_NATIVE', True), d.getVar('PKG_CONFIG_PATH', True))}|" \
+        -e "s|@REL_LIBDIR_NATIVE@|${@os.path.relpath(d.getVar('PKG_CONFIG_LIBDIR', True), d.getVar('STAGING_DIR_NATIVE', True))}|" \
+        -e "s|@bindir_to_prefix@|${@os.path.relpath(d.getVar('STAGING_DIR_NATIVE', True), d.getVar('STAGING_BINDIR_NATIVE', True))}|" \
         < ${WORKDIR}/pkg-config-native.in > ${B}/pkg-config-native
     install -m755 ${B}/pkg-config-native ${D}${bindir}/pkg-config-native
 }
