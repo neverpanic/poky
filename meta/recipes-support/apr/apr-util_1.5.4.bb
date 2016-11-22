@@ -18,13 +18,16 @@ SRC_URI = "${APACHE_MIRROR}/apr/${BPN}-${PV}.tar.gz \
 SRC_URI[md5sum] = "866825c04da827c6e5f53daff5569f42"
 SRC_URI[sha256sum] = "976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19"
 
+GDBM_EXPAT_PREFIX = "${prefix}"
+GDBM_EXPAT_PREFIX_class-native = "${prefix_native}"
+
 EXTRA_OECONF = "--with-apr=${STAGING_BINDIR_CROSS}/apr-1-config \ 
 		--without-odbc \
 		--without-pgsql \
 		--with-dbm=gdbm \
-		--with-gdbm=${STAGING_DIR_HOST}${prefix} \
+		--with-gdbm=${STAGING_DIR_HOST}${GDBM_EXPAT_PREFIX} \
 		--without-sqlite2 \
-		--with-expat=${STAGING_DIR_HOST}${prefix}"
+		--with-expat=${STAGING_DIR_HOST}${GDBM_EXPAT_PREFIX}"
 
 
 inherit autotools lib_package binconfig
